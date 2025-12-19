@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box, Toolbar, CircularProgress } from '@mui/material';
@@ -37,11 +36,11 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     </Box>
   );
   
-  return isAuthenticated ? <MainLayout>{children}</MainLayout> : <Navigate to="/login" />;
+  return isAuthenticated ? <MainLayout>{children}</MainLayout> : <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => {
-  const setUser = useStore((state) => state.setUser);
+  const { setUser, loading } = useStore();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -63,14 +62,27 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [setUser]);
 
+  // Mostrar loading enquanto verifica autenticação
+  if (loading) {
+    return (
+      <ThemeProvider theme={golTheme}>
+        <CssBaseline />
+        <Box sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CircularProgress />
+        </Box>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider theme={golTheme}>
       <CssBaseline />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
